@@ -43,3 +43,38 @@ def list_emails(
     except requests.exceptions.RequestException as e:
         logger.error(f"Error in listing emails: {e}")
         return {"error":str(e)}
+
+@mcp.tool(name="send_email",description="Send a plain text email to a specific recipient")
+def send_email(
+    subject: Annotated[str,Field(description="The subject line of the email")],
+    body: Annotated[str,Field(description="The main text content of the email")],
+    to_email: Annotated[str,Field(description="The recipient's email address")]
+) -> ApiObjectResponse:
+    """Send a new email"""
+    try:
+        headers=get_outlook_headers()
+        url = "https://graph.microsoft.com/v1.0/me/sendMail"
+
+        payload = {
+            "message": {
+                "subject": subject,
+                "body": {
+                    "contentType": "Text",
+                    "content": body
+                },
+                "toRecipients": [
+                    {
+                        "emailAddress": {
+                            "address": to_email
+                        }
+                    }
+                ]
+            },
+            "saveToSentItems": "true"
+        }
+        response = requests.post(url,headers=headers,json=payload)
+        response.raise_for_status()
+        return {"message":"Email sent successfully"}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error whilst sending email {e}")
+        return {"error":str(e)}
