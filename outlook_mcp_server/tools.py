@@ -107,3 +107,19 @@ def create_draft(
     except requests.exceptions.RequestException as e:
         logger.error(f"Error in creating draft: {e}")
         return {"error":str(e)}
+    
+@mcp.tool(name="search_email",description="Search for emails using a keyword or advanced KQL query matching subjects, bodies or senders.")
+def search_email(
+    query: Annotated[str, Field(description="The search keyword or query string (e.g., 'invoice', 'from:boss@company.com'")]
+) -> ApiObjectResponse:
+    """Search emails via Graph Keyword search syntax"""
+    try:
+        headers = get_outlook_headers()
+        url = f'https://graph.microsoft.com/v1.0/me/messages?$search="{query}"'
+        response = requests.get(url,headers=headers)
+        response.raise_for_status()
+        return {"message":"Success","emails":response.json().get('value',[])}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching details of the mail: {e}")
+        return {"error":str(e)}
+    
