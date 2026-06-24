@@ -78,3 +78,32 @@ def send_email(
     except requests.exceptions.RequestException as e:
         logger.error(f"Error whilst sending email {e}")
         return {"error":str(e)}
+
+@mcp.tool(name="create_draft", description="Create a new email draft and add it to the drafts folder without sending it.")
+def create_draft(
+    subject: Annotated[str,Field(description="The subject line of the email")],
+    body: Annotated[str,Field(description="The text content of the email")],
+    to_email: Annotated[str,Field(description="The recipient's email address")]
+) -> ApiObjectResponse:
+    """Create a message draft"""
+    try:
+        headers=get_outlook_headers()
+        url = "https://graph.microsoft.com/v1.0/me/messages"
+
+        payload = {
+            "subject":subject,
+            "body":{
+                "contentType":"Text",
+                "content":body
+            },
+            "toRecipients": [
+                {"emailAddress":{"address":to_email}}
+            ]
+        }
+
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        return {"message":"Draft created successfully", "draft":response.json()}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error in creating draft: {e}")
+        return {"error":str(e)}
