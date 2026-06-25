@@ -5,6 +5,7 @@ from typing import Annotated, Optional
 from pydantic import Field
 from fastmcp import FastMCP
 from .schema import ApiObjectResponse
+from .schemas.CreateEventRequestBody import CreateEventRequestBody
 from .service import get_outlook_headers
 
 logger = logging.getLogger("tasks-mcp-server")
@@ -108,7 +109,7 @@ def create_draft(
     except requests.exceptions.RequestException as e:
         logger.error(f"Error in creating draft: {e}")
         return {"error":str(e)}
-    
+
 @mcp.tool(name="search_email",description="Search for emails using a keyword or advanced KQL query matching subjects, bodies or senders.")
 def search_email(
     query: Annotated[str, Field(description="The search keyword or query string (e.g., 'invoice', 'from:boss@company.com'")]
@@ -202,3 +203,23 @@ def get_all_events(
     except requests.exceptions.RequestException as e:
         logger.error(f"Error in listing events: {e}")
         return {"error": str(e)}
+
+@mcp.tool(name="create_calendar_event", description="Creates a calendar event")
+def post_calendar_event(
+    body: CreateEventRequestBody
+) -> ApiObjectResponse:
+    """Create a Calendar Event"""
+    try:
+        headers = get_outlook_headers()
+        url = f"https://graph.microsoft.com/v1.0/me/calendar/events"
+
+
+        response = requests.post(url=url, headers=headers, json=body.model_dump())
+        response.raise_for_status()
+
+        data = response.json()
+        print(data)
+        return {"message": "Success", "event": data}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Creating event failed: {e}")
+        return {"error":str(e)}
