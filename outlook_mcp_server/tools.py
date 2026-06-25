@@ -122,4 +122,26 @@ def search_email(
     except requests.exceptions.RequestException as e:
         logger.error(f"Error fetching details of the mail: {e}")
         return {"error":str(e)}
+
+@mcp.tool(name="reply_to_email",description="Reply to an existing email thread with a text message")
+def reply_to_email(
+    message_id: Annotated[str, Field(description="The unique ID of the message")],
+    comment: Annotated[str,Field(description="The body of the email")]
+) -> ApiObjectResponse:
+    """Reply directly to an email message"""
+    try:
+        headers=get_outlook_headers()
+        url=f"https://graph.microsoft.com/v1.0/me/messages/{message_id}/reply"
+
+        payload = {
+            "comment":comment
+        }
+
+        reponse = requests.post(url=url,headers=headers,json=payload)
+        reponse.raise_for_status()
+        return {"message":"Reply sent successfully"}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error whilst replying to email: {e}")
+        return {"error":str(e)}
+
     
