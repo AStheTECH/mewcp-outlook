@@ -3,3 +3,10 @@ token.json
 __pycache__/
 venv/
 env/
+auth_token.json
+secret.json
+get_auth.py
+main.py
+uv.lock
+pyproject.toml
+.python-version

@@ -1,9 +1,10 @@
+from datetime import timedelta, timezone, datetime
 import logging
 import requests
-from typing import List, Annotated
+from typing import Annotated, Optional
 from pydantic import Field
 from fastmcp import FastMCP
-from .schema import ApiObjectResponse 
+from .schema import ApiObjectResponse
 from .service import get_outlook_headers
 
 logger = logging.getLogger("tasks-mcp-server")
@@ -168,3 +169,36 @@ def forward_email(
     except requests.exceptions.RequestException as e:
         logger.error(f"Forwarding failed: {e}")
         return {"error":str(e)}
+
+@mcp.tool(name="list_events", description="List recent events for a user from all of his calendars")
+def get_all_events(
+    start_date: Optional[Annotated[datetime, Field(default=None, description="The start time from when to get the calendar events. Defaults to now if not provided.")]] = None,
+    end_date: Optional[Annotated[datetime, Field(default=None, description="The end time till when to get the calendar events. Defaults to 31 days after start_date if not provided.")]] = None,
+    max_results: Annotated[int, Field(default=10, ge=1, le=50, description="Number of events to return.")] = 10,
+) -> ApiObjectResponse:
+    """Retrieve recent events"""
+    logger.info("Executing list_events")
+    try:
+        start_date = start_date if start_date else datetime.now(timezone.utc)
+        end_date = end_date if end_date else (start_date + timedelta(days=31))
+
+        headers = get_outlook_headers()
+        params = {
+            "startDateTime": start_date.strftime("%Y-%m-%dT%H:%M:%S"),
+            "endDateTime": end_date.strftime("%Y-%m-%dT%H:%M:%S"),
+            "$top": max_results,
+            "$select": "body,locations,onlineMeetingUrl,start,end",
+            "$orderby": "start/dateTime",
+        }
+        response = requests.get(
+            "https://graph.microsoft.com/v1.0/me/calendarView",
+            headers=headers,
+            params=params,
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        return {"message": "Success", "events": data.get('value', [])}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error in listing events: {e}")
+        return {"error": str(e)}
