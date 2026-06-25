@@ -144,4 +144,27 @@ def reply_to_email(
         logger.error(f"Error whilst replying to email: {e}")
         return {"error":str(e)}
 
-    
+@mcp.tool(name="forward_email",description="Forward an existing email to a new recipient with added comments")
+def forward_email(
+    message_id: Annotated[str, Field(description="The unique ID of the message")],
+    comment: Annotated[str, Field(description="The body of the message")],
+    recipient: Annotated[str, Field(description="The recipients email address")]
+) -> ApiObjectResponse:
+    """Forward a message"""
+    try:
+        headers = get_outlook_headers()
+        url = f"https://graph.microsoft.com/v1.0/me/messages/{message_id}/forward"
+
+        payload = {
+            "comment":comment,
+            "toRecipients":[
+                {"emailAddress":{"address":recipient}}
+            ]
+        }
+
+        response = requests.post(url=url, headers=headers, json=payload)
+        response.raise_for_status()
+        return {"message":"Message forwarded successfully"}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Forwarding failed: {e}")
+        return {"error":str(e)}
