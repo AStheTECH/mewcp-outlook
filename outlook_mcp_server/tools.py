@@ -5,7 +5,11 @@ from typing import Annotated, Optional
 from pydantic import Field
 from fastmcp import FastMCP
 from .schema import ApiObjectResponse
-from .schemas.CreateEventRequestBody import CreateEventRequestBody
+from .schemas import (
+    CreateEventRequestBody,
+    FindMeetingTimesRequestBody
+)
+
 from .service import get_outlook_headers
 
 logger = logging.getLogger("tasks-mcp-server")
@@ -222,4 +226,26 @@ def post_calendar_event(
         return {"message": "Success", "event": data}
     except requests.exceptions.RequestException as e:
         logger.error(f"Creating event failed: {e}")
+        return {"error":str(e)}
+
+# Works only on schools and work accounts
+@mcp.tool(
+    name="find_meeting_time",
+    description="Find a common meeting time, with probably attendee percentage"
+)
+def post_find_meeting_times(
+    body: FindMeetingTimesRequestBody
+) -> ApiObjectResponse:
+    """Find Meetings Times - Returns a List of Meeting Available Meeting Times with the Probable Attendee Percentage"""
+    try:
+        headers = get_outlook_headers()
+        url = f"https://graph.microsoft.com/v1.0/me/findMeetingTimes"
+
+        response = requests.post(url = url, headers = headers, json =  body.model_dump())
+        response.raise_for_status()
+
+        data = response.json()
+        return {"message": "success", "data": data}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Find Meeting Times Failed: {e}")
         return {"error":str(e)}
