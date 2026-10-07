@@ -130,8 +130,8 @@ class MessageListItem(BaseModel):
     id: str | None = Field(
         default=None,
         description=(
-            "Unique identifier of the message, consumed by get_message, reply_to_a_message, "
-            "reply_all_to_a_message, forward_message, and the create_draft_to_* tools."
+            "Unique identifier of the message, consumed by get_message, reply_message, "
+            "reply_all_message, forward_message, and the create_draft_to_* tools."
         ),
     )
     subject: str | None = None
@@ -153,24 +153,24 @@ class ListMessagesResult(ToolResult):
     data: ListMessagesData | None = None
 
 
-class ReplyAllToAMessageData(BaseModel):
+class ReplyAllMessageData(BaseModel):
     """Graph returns 202 Accepted with no response body for this endpoint."""
 
     model_config = ConfigDict(extra="allow")
 
 
-class ReplyAllToAMessageResult(ToolResult):
-    data: ReplyAllToAMessageData | None = None
+class ReplyAllMessageResult(ToolResult):
+    data: ReplyAllMessageData | None = None
 
 
-class ReplyToAMessageData(BaseModel):
+class ReplyMessageData(BaseModel):
     """Graph returns 202 Accepted with no response body for this endpoint."""
 
     model_config = ConfigDict(extra="allow")
 
 
-class ReplyToAMessageResult(ToolResult):
-    data: ReplyToAMessageData | None = None
+class ReplyMessageResult(ToolResult):
+    data: ReplyMessageData | None = None
 
 
 class SendDraftMessageData(BaseModel):

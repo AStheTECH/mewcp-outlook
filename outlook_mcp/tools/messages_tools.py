@@ -1,6 +1,6 @@
 """Messages group: create_draft_message, create_draft_to_forward_message,
 create_draft_to_reply_all, create_draft_to_reply, forward_message, get_message,
-list_messages, reply_all_to_a_message, reply_to_a_message, send_draft_message, send_mail."""
+list_messages, reply_all_message, reply_message, send_draft_message, send_mail."""
 
 import logging
 from typing import Any
@@ -27,10 +27,10 @@ from ..schemas.messages import (
     GetMessageResult,
     ListMessagesData,
     ListMessagesResult,
-    ReplyAllToAMessageData,
-    ReplyAllToAMessageResult,
-    ReplyToAMessageData,
-    ReplyToAMessageResult,
+    ReplyAllMessageData,
+    ReplyAllMessageResult,
+    ReplyMessageData,
+    ReplyMessageResult,
     SendDraftMessageData,
     SendDraftMessageResult,
     SendMailData,
@@ -52,22 +52,34 @@ def register_messages_tools(mcp: FastMCP) -> None:
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
     def create_draft_message(
-        subject: str | None = Field(default=None, description="Subject line of the draft message."),
+        subject: str | None = Field(
+            default=None,
+            description="Subject line of the draft message. Omit to create the draft with no subject.",
+        ),
         importance: str | None = Field(
             default=None,
             description="Importance of the message: Low, Normal, or High. Omit to use the default (Normal).",
         ),
         body: dict[str, Any] | None = Field(
             default=None,
-            description="Message body as {contentType: 'Text' or 'HTML', content: <string>}.",
+            description=(
+                "Message body as {contentType: 'Text' or 'HTML', content: <string>}. "
+                "Omit to create the draft with an empty body."
+            ),
         ),
         toRecipients: list[dict[str, Any]] | None = Field(
             default=None,
-            description="Recipients of the draft, each as {emailAddress: {address: <string>, name: <string>}}.",
+            description=(
+                "Recipients of the draft, each as {emailAddress: {address: <string>, name: <string>}}. "
+                "Omit to create the draft with no recipients, to be added later."
+            ),
         ),
         internetMessageHeaders: list[dict[str, Any]] | None = Field(
             default=None,
-            description="Custom Internet message headers to attach, each as {name: <string>, value: <string>}.",
+            description=(
+                "Custom Internet message headers to attach, each as {name: <string>, value: <string>}. "
+                "Omit to send no custom headers."
+            ),
         ),
     ) -> CreateDraftMessageResult:
         tlog = ToolLogger(logger, "create_draft_message")
@@ -109,7 +121,7 @@ def register_messages_tools(mcp: FastMCP) -> None:
             "Creates a draft Forward message for an existing message, which can be edited and sent later "
             "with send_draft_message. Specify recipients via either the top-level `toRecipients` or "
             "`message.toRecipients` (exactly one, not both and not neither), and a lead-in note via either "
-            "`comment` or `message.body` (not both)."
+            "`comment` or `message.body` (not both). Returns the created draft."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
@@ -178,7 +190,7 @@ def register_messages_tools(mcp: FastMCP) -> None:
         description=(
             "Creates a draft Reply All message for an existing message, addressed to the sender and all "
             "original recipients, which can be edited and sent later with send_draft_message. Specify a "
-            "lead-in note via either `comment` or `message.body`, not both."
+            "lead-in note via either `comment` or `message.body`, not both. Returns the created draft."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
@@ -225,7 +237,8 @@ def register_messages_tools(mcp: FastMCP) -> None:
         description=(
             "Creates a draft Reply message for an existing message, addressed to the sender, which can be "
             "edited and sent later with send_draft_message. Specify a lead-in note via either `comment` or "
-            "`message.body`, not both; use `message.toRecipients` to add recipients beyond the original sender."
+            "`message.body`, not both; use `message.toRecipients` to add recipients beyond the original "
+            "sender. Returns the created draft."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
@@ -275,7 +288,8 @@ def register_messages_tools(mcp: FastMCP) -> None:
         description=(
             "Forwards an existing message to the given recipients in a single call and saves the forward "
             "to Sent Items. Requires at least one recipient in `toRecipients`; use "
-            "create_draft_to_forward_message instead if the forward needs editing before it's sent."
+            "create_draft_to_forward_message instead if the forward needs editing before it's sent. "
+            "Returns no content on success (202 Accepted)."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
@@ -323,7 +337,10 @@ def register_messages_tools(mcp: FastMCP) -> None:
         id: str = Field(description="Unique identifier of the message."),
         select: str | None = Field(
             default=None,
-            description="Comma-separated list of properties to return instead of the full message object, e.g. 'subject,sender'.",
+            description=(
+                "Comma-separated list of properties to return instead of the full message object, e.g. "
+                "'subject,sender'. Omit to return the full message object with all properties."
+            ),
         ),
     ) -> GetMessageResult:
         tlog = ToolLogger(logger, "get_message")
@@ -357,24 +374,39 @@ def register_messages_tools(mcp: FastMCP) -> None:
     def list_messages(
         select: str | None = Field(
             default=None,
-            description="Comma-separated list of properties to return, e.g. 'subject,sender'.",
+            description=(
+                "Comma-separated list of properties to return, e.g. 'subject,sender'. Omit to return the "
+                "default message properties."
+            ),
         ),
         filter: str | None = Field(
             default=None,
-            description="OData filter expression to restrict the messages returned, e.g. \"isRead eq false\".",
+            description=(
+                "OData filter expression to restrict the messages returned, e.g. \"isRead eq false\". "
+                "Omit to apply no OData filter, returning all messages."
+            ),
         ),
         orderby: str | None = Field(
             default=None,
-            description="Property to sort the results by, e.g. 'receivedDateTime desc'.",
+            description=(
+                "Property to sort the results by, e.g. 'receivedDateTime desc'. Omit to use the API's "
+                "default ordering."
+            ),
         ),
         search: str | None = Field(
             default=None,
-            description="Search expression to match against message content.",
+            description=(
+                "Free-text search expression to match against message content, e.g. 'subject:invoice'. "
+                "Omit to apply no search filtering."
+            ),
         ),
         top: int = Field(default=10, description="Page size, 1-1000. Defaults to 10."),
         skip: int | None = Field(
             default=None,
-            description="Number of results to skip. Prefer following the returned next-page link for paging instead of setting this manually.",
+            description=(
+                "Number of results to skip. Omit to start from the first result with no results skipped. "
+                "Prefer following the returned `@odata.nextLink` for paging instead of setting this manually."
+            ),
         ),
     ) -> ListMessagesResult:
         tlog = ToolLogger(logger, "list_messages")
@@ -407,22 +439,22 @@ def register_messages_tools(mcp: FastMCP) -> None:
             return _handle_request_exc(ListMessagesResult, tlog, exc)
 
     @mcp.tool(
-        name="reply_all_to_a_message",
+        name="reply_all_message",
         description=(
             "Replies to the sender and all recipients of an existing message in a single call and saves "
             "the reply to Sent Items. Use create_draft_to_reply_all instead if the reply needs editing "
-            "before it's sent."
+            "before it's sent. Returns no content on success (202 Accepted)."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
-    def reply_all_to_a_message(
+    def reply_all_message(
         id: str = Field(description="ID of the message being replied to."),
         comment: str | None = Field(
             default=None,
             description="Plain-text comment prepended to the reply; can be an empty string. Omit for no comment.",
         ),
-    ) -> ReplyAllToAMessageResult:
-        tlog = ToolLogger(logger, "reply_all_to_a_message")
+    ) -> ReplyAllMessageResult:
+        tlog = ToolLogger(logger, "reply_all_message")
 
         payload: dict[str, Any] = {}
         if comment is not None:
@@ -435,21 +467,22 @@ def register_messages_tools(mcp: FastMCP) -> None:
             )
             if 200 <= status < 300:
                 tlog.success()
-                return ReplyAllToAMessageResult(success=True, statusCode=status, data=ReplyAllToAMessageData())
-            return _upstream_err(ReplyAllToAMessageResult, tlog, status, data, retry_after)
+                return ReplyAllMessageResult(success=True, statusCode=status, data=ReplyAllMessageData())
+            return _upstream_err(ReplyAllMessageResult, tlog, status, data, retry_after)
         except Exception as exc:
-            return _handle_request_exc(ReplyAllToAMessageResult, tlog, exc)
+            return _handle_request_exc(ReplyAllMessageResult, tlog, exc)
 
     @mcp.tool(
-        name="reply_to_a_message",
+        name="reply_message",
         description=(
             "Replies to the sender of an existing message in a single call and saves the reply to Sent "
             "Items. Use `message` to override properties such as adding extra `toRecipients`, and use "
-            "create_draft_to_reply instead if the reply needs editing before it's sent."
+            "create_draft_to_reply instead if the reply needs editing before it's sent. Returns no "
+            "content on success (202 Accepted)."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
-    def reply_to_a_message(
+    def reply_message(
         id: str = Field(description="ID of the message being replied to."),
         comment: str | None = Field(
             default=None,
@@ -457,10 +490,13 @@ def register_messages_tools(mcp: FastMCP) -> None:
         ),
         message: dict[str, Any] | None = Field(
             default=None,
-            description="Message properties to override, e.g. adding extra toRecipients beyond the original sender.",
+            description=(
+                "Message properties to override, e.g. adding extra toRecipients beyond the original "
+                "sender. Omit to reply using only the `comment` text with no additional property overrides."
+            ),
         ),
-    ) -> ReplyToAMessageResult:
-        tlog = ToolLogger(logger, "reply_to_a_message")
+    ) -> ReplyMessageResult:
+        tlog = ToolLogger(logger, "reply_message")
 
         payload: dict[str, Any] = {}
         if comment is not None:
@@ -475,17 +511,17 @@ def register_messages_tools(mcp: FastMCP) -> None:
             )
             if 200 <= status < 300:
                 tlog.success()
-                return ReplyToAMessageResult(success=True, statusCode=status, data=ReplyToAMessageData())
-            return _upstream_err(ReplyToAMessageResult, tlog, status, data, retry_after)
+                return ReplyMessageResult(success=True, statusCode=status, data=ReplyMessageData())
+            return _upstream_err(ReplyMessageResult, tlog, status, data, retry_after)
         except Exception as exc:
-            return _handle_request_exc(ReplyToAMessageResult, tlog, exc)
+            return _handle_request_exc(ReplyMessageResult, tlog, exc)
 
     @mcp.tool(
         name="send_draft_message",
         description=(
             "Sends a previously created draft message by its id and saves it to Sent Items. The draft "
             "must come from create_draft_message, create_draft_to_reply, create_draft_to_reply_all, or "
-            "create_draft_to_forward_message."
+            "create_draft_to_forward_message. Returns no content on success (202 Accepted)."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
@@ -511,7 +547,8 @@ def register_messages_tools(mcp: FastMCP) -> None:
         description=(
             "Composes and sends a new message in a single call without creating a draft first, saving it "
             "to Sent Items unless `saveToSentItems` is set to false. `message` must be a full message "
-            "resource, e.g. subject, body, toRecipients, ccRecipients, attachments."
+            "resource, e.g. subject, body, toRecipients, ccRecipients, attachments. Returns no content on "
+            "success (202 Accepted)."
         ),
         annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
     )
