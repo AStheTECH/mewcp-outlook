@@ -19,7 +19,7 @@
       "send_mail.md"
     ]
   },
-  "validation_rounds": 0,
+  "validation_rounds": 1,
   "validation_passed": false,
   "docs_status_written": false,
   "readme": false

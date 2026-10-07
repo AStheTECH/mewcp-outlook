@@ -210,7 +210,7 @@
             ],
             "schema": { "data": "ListMessagesData", "result": "ListMessagesResult" }
           },
-          "reply_all_to_a_message": {
+          "reply_all_message": {
             "doc_file": "messages/reply_all_to_a_message.md",
             "endpoint": "POST /me/messages/{id}/replyAll",
             "description": "Reply to all recipients of a message in a single call; the reply is saved in the Sent Items folder.",
@@ -220,9 +220,9 @@
               { "name": "comment", "type": "string", "required": false, "description": "Optional plain-text comment prepended to the reply; can be an empty string. No message override parameter is documented for this endpoint." }
             ],
             "response_fields": [],
-            "schema": { "data": "ReplyAllToAMessageData", "result": "ReplyAllToAMessageResult" }
+            "schema": { "data": "ReplyAllMessageData", "result": "ReplyAllMessageResult" }
           },
-          "reply_to_a_message": {
+          "reply_message": {
             "doc_file": "messages/reply_to_a_message.md",
             "endpoint": "POST /me/messages/{id}/reply",
             "description": "Reply to the sender of a message in a single call; the reply is saved in the Sent Items folder.",
@@ -233,7 +233,7 @@
               { "name": "message", "type": "object", "required": false, "description": "Message properties to override, e.g. adding extra toRecipients beyond the original sender." }
             ],
             "response_fields": [],
-            "schema": { "data": "ReplyToAMessageData", "result": "ReplyToAMessageResult" }
+            "schema": { "data": "ReplyMessageData", "result": "ReplyMessageResult" }
           },
           "send_draft_message": {
             "doc_file": "messages/send_draft_message.md",
