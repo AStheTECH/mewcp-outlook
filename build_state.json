@@ -1,8 +1,8 @@
 {
   "manifest_server_block": true,
   "planning": true,
-  "infra": false,
-  "tool_groups": {},
+  "infra": true,
+  "tool_groups": { "users": true, "messages": true },
   "built_from": {
     "users": ["get_user.md"],
     "messages": [
