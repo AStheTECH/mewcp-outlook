@@ -20,7 +20,7 @@
     ]
   },
   "validation_rounds": 1,
-  "validation_passed": false,
+  "validation_passed": true,
   "docs_status_written": false,
   "readme": false
 }
