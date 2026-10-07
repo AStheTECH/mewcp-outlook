@@ -1,0 +1,267 @@
+{
+  "manifest_version": 1,
+  "server": {
+    "name": "mewcp-outlook",
+    "package": "outlook_mcp",
+    "auth": "oauth",
+    "version": "v1.0.0",
+    "api_base": "https://graph.microsoft.com/v1.0"
+  },
+  "tools": {
+    "groups": {
+      "users": {
+        "file": "users_tools.py",
+        "doc_source": "users/get_user.md",
+        "register_fn": "register_users_tools",
+        "tools": {
+          "get_user": {
+            "doc_file": "users/get_user.md",
+            "endpoint": "GET /me",
+            "description": "Read properties and relationships of a user object.",
+            "tier": "GET",
+            "params": [
+              {
+                "name": "$select",
+                "type": "string",
+                "required": false,
+                "description": "Comma-separated list of properties to return instead of the default set (businessPhones, displayName, givenName, id, jobTitle, mail, mobilePhone, officeLocation, preferredLanguage, surname, userPrincipalName)."
+              }
+            ],
+            "response_fields": [
+              { "name": "businessPhones", "type": "String collection" },
+              { "name": "displayName", "type": "String" },
+              { "name": "givenName", "type": "String" },
+              { "name": "jobTitle", "type": "String" },
+              { "name": "mail", "type": "String" },
+              { "name": "mobilePhone", "type": "String" },
+              { "name": "officeLocation", "type": "String" },
+              { "name": "preferredLanguage", "type": "String" },
+              { "name": "surname", "type": "String" },
+              { "name": "userPrincipalName", "type": "String" },
+              { "name": "id", "type": "String" }
+            ],
+            "schema": { "data": "UserData", "result": "UserResult" }
+          }
+        }
+      },
+      "messages": {
+        "file": "messages_tools.py",
+        "doc_source": "messages/list_messages.md",
+        "register_fn": "register_messages_tools",
+        "tools": {
+          "create_draft_message": {
+            "doc_file": "messages/create_draft_message.md",
+            "endpoint": "POST /me/messages",
+            "description": "Create a draft of a new message, saved to the Drafts folder by default.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "subject", "type": "string", "required": false, "description": "Subject line of the message." },
+              { "name": "importance", "type": "string", "required": false, "description": "Importance of the message: Low, Normal, or High." },
+              { "name": "body", "type": "object", "required": false, "description": "Message body, with contentType (Text or HTML) and content." },
+              { "name": "toRecipients", "type": "array", "required": false, "description": "Recipients of the message, each as {emailAddress: {address}}." },
+              { "name": "internetMessageHeaders", "type": "array", "required": false, "description": "Custom Internet message headers, each as {name, value}." }
+            ],
+            "response_fields": [
+              { "name": "id", "type": "String" },
+              { "name": "isDraft", "type": "Boolean" },
+              { "name": "parentFolderId", "type": "String" },
+              { "name": "webLink", "type": "String" },
+              { "name": "subject", "type": "String" },
+              { "name": "body", "type": "object" },
+              { "name": "bodyPreview", "type": "String" },
+              { "name": "importance", "type": "String" },
+              { "name": "toRecipients", "type": "array" },
+              { "name": "ccRecipients", "type": "array" },
+              { "name": "bccRecipients", "type": "array" },
+              { "name": "replyTo", "type": "array" },
+              { "name": "createdDateTime", "type": "DateTimeOffset" },
+              { "name": "lastModifiedDateTime", "type": "DateTimeOffset" },
+              { "name": "receivedDateTime", "type": "DateTimeOffset" },
+              { "name": "sentDateTime", "type": "DateTimeOffset" }
+            ],
+            "schema": { "data": "CreateDraftMessageData", "result": "CreateDraftMessageResult" }
+          },
+          "create_draft_to_forward_message": {
+            "doc_file": "messages/create_draft_to_forward_message.md",
+            "endpoint": "POST /me/messages/{id}/createForward",
+            "description": "Create a draft of the Forward message for an existing message; the draft can then be updated or sent.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "id", "type": "string", "required": true, "description": "Path parameter — ID of the message to forward." },
+              { "name": "toRecipients", "type": "array", "required": false, "description": "Top-level recipients list. Specify either this or message.toRecipients, not both." },
+              { "name": "message", "type": "object", "required": false, "description": "Message properties to pre-set on the draft (e.g. toRecipients). Specify either message.toRecipients or the top-level toRecipients, not both; either message.body or comment, not both." },
+              { "name": "comment", "type": "string", "required": false, "description": "Comment prepended to the forwarded message. Mutually exclusive with message.body." }
+            ],
+            "response_fields": [
+              { "name": "id", "type": "String" },
+              { "name": "receivedDateTime", "type": "String" },
+              { "name": "sentDateTime", "type": "String" },
+              { "name": "hasAttachments", "type": "Boolean" },
+              { "name": "subject", "type": "String" },
+              { "name": "body", "type": "object" },
+              { "name": "bodyPreview", "type": "String" }
+            ],
+            "schema": { "data": "CreateDraftToForwardMessageData", "result": "CreateDraftToForwardMessageResult" }
+          },
+          "create_draft_to_reply_all": {
+            "doc_file": "messages/create_draft_to_reply_all.md",
+            "endpoint": "POST /me/messages/{id}/createReplyAll",
+            "description": "Create a draft of the Reply All message for an existing message; the draft can then be updated or sent.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "id", "type": "string", "required": true, "description": "Path parameter — ID of the message being replied to." },
+              { "name": "comment", "type": "string", "required": false, "description": "Plain-text comment prepended to the reply; can be an empty string. Mutually exclusive with message.body." },
+              { "name": "message", "type": "object", "required": false, "description": "Message properties to pre-set on the draft. Specify either this (message.body) or comment, not both." }
+            ],
+            "response_fields": [
+              { "name": "id", "type": "String" },
+              { "name": "receivedDateTime", "type": "String" },
+              { "name": "sentDateTime", "type": "String" },
+              { "name": "hasAttachments", "type": "Boolean" },
+              { "name": "subject", "type": "String" },
+              { "name": "body", "type": "object" },
+              { "name": "bodyPreview", "type": "String" }
+            ],
+            "schema": { "data": "CreateDraftToReplyAllData", "result": "CreateDraftToReplyAllResult" }
+          },
+          "create_draft_to_reply": {
+            "doc_file": "messages/create_draft_to_reply.md",
+            "endpoint": "POST /me/messages/{id}/createReply",
+            "description": "Create a draft of the Reply message for an existing message; the draft can then be updated or sent.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "id", "type": "string", "required": true, "description": "Path parameter — ID of the message being replied to." },
+              { "name": "comment", "type": "string", "required": false, "description": "Plain-text comment prepended to the reply; can be an empty string. Mutually exclusive with message.body." },
+              { "name": "message", "type": "object", "required": false, "description": "Message properties to pre-set on the draft, e.g. toRecipients to add recipients beyond the original sender. Specify either this (message.body) or comment, not both." }
+            ],
+            "response_fields": [
+              { "name": "id", "type": "String" },
+              { "name": "receivedDateTime", "type": "String" },
+              { "name": "sentDateTime", "type": "String" },
+              { "name": "hasAttachments", "type": "Boolean" },
+              { "name": "subject", "type": "String" },
+              { "name": "body", "type": "object" },
+              { "name": "bodyPreview", "type": "String" }
+            ],
+            "schema": { "data": "CreateDraftToReplyData", "result": "CreateDraftToReplyResult" }
+          },
+          "forward_message": {
+            "doc_file": "messages/forward_message.md",
+            "endpoint": "POST /me/messages/{id}/forward",
+            "description": "Forward a message in a single call; the forward is saved in the Sent Items folder.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "id", "type": "string", "required": true, "description": "Path parameter — ID of the message to forward." },
+              { "name": "toRecipients", "type": "array", "required": true, "description": "Recipients to forward to, each as {emailAddress: {name, address}}." },
+              { "name": "comment", "type": "string", "required": false, "description": "Optional comment prepended to the forwarded message; can be an empty string." }
+            ],
+            "response_fields": [],
+            "schema": { "data": "ForwardMessageData", "result": "ForwardMessageResult" }
+          },
+          "get_message": {
+            "doc_file": "messages/get_message.md",
+            "endpoint": "GET /me/messages/{id}",
+            "description": "Read the properties and relationships of a message object.",
+            "tier": "GET",
+            "params": [
+              { "name": "id", "type": "string", "required": true, "description": "Path parameter — unique identifier of the message." },
+              { "name": "$select", "type": "string", "required": false, "description": "Comma-separated list of properties to return instead of the full message object." }
+            ],
+            "response_fields": [
+              { "name": "id", "type": "String" },
+              { "name": "subject", "type": "String" },
+              { "name": "body", "type": "object" },
+              { "name": "bodyPreview", "type": "String" },
+              { "name": "sender", "type": "object" },
+              { "name": "from", "type": "object" },
+              { "name": "toRecipients", "type": "array" },
+              { "name": "ccRecipients", "type": "array" },
+              { "name": "bccRecipients", "type": "array" },
+              { "name": "replyTo", "type": "array" },
+              { "name": "isRead", "type": "Boolean" },
+              { "name": "isDraft", "type": "Boolean" },
+              { "name": "hasAttachments", "type": "Boolean" },
+              { "name": "parentFolderId", "type": "String" },
+              { "name": "conversationId", "type": "String" },
+              { "name": "webLink", "type": "String" },
+              { "name": "flag", "type": "object" }
+            ],
+            "schema": { "data": "GetMessageData", "result": "GetMessageResult" }
+          },
+          "list_messages": {
+            "doc_file": "messages/list_messages.md",
+            "endpoint": "GET /me/messages",
+            "description": "Get all the messages in the signed-in user's mailbox, including the Deleted Items and Clutter folders.",
+            "tier": "GET",
+            "params": [
+              { "name": "$select", "type": "string", "required": false, "description": "Comma-separated list of properties to return." },
+              { "name": "$filter", "type": "string", "required": false, "description": "OData filter expression to restrict the messages returned." },
+              { "name": "$orderby", "type": "string", "required": false, "description": "Property to sort the results by." },
+              { "name": "$search", "type": "string", "required": false, "description": "Search expression." },
+              { "name": "$top", "type": "integer", "required": false, "description": "Page size, 1-1000, default 10." },
+              { "name": "$skip", "type": "integer", "required": false, "description": "Number of results to skip. Prefer following @odata.nextLink for paging instead of setting this manually." }
+            ],
+            "response_fields": [
+              { "name": "value", "type": "array" },
+              { "name": "value[].id", "type": "String" },
+              { "name": "value[].subject", "type": "String" },
+              { "name": "value[].sender", "type": "object" },
+              { "name": "@odata.nextLink", "type": "String" }
+            ],
+            "schema": { "data": "ListMessagesData", "result": "ListMessagesResult" }
+          },
+          "reply_all_message": {
+            "doc_file": "messages/reply_all_to_a_message.md",
+            "endpoint": "POST /me/messages/{id}/replyAll",
+            "description": "Reply to all recipients of a message in a single call; the reply is saved in the Sent Items folder.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "id", "type": "string", "required": true, "description": "Path parameter — ID of the message being replied to." },
+              { "name": "comment", "type": "string", "required": false, "description": "Optional plain-text comment prepended to the reply; can be an empty string. No message override parameter is documented for this endpoint." }
+            ],
+            "response_fields": [],
+            "schema": { "data": "ReplyAllMessageData", "result": "ReplyAllMessageResult" }
+          },
+          "reply_message": {
+            "doc_file": "messages/reply_to_a_message.md",
+            "endpoint": "POST /me/messages/{id}/reply",
+            "description": "Reply to the sender of a message in a single call; the reply is saved in the Sent Items folder.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "id", "type": "string", "required": true, "description": "Path parameter — ID of the message being replied to." },
+              { "name": "comment", "type": "string", "required": false, "description": "Optional plain-text comment prepended to the reply; can be an empty string." },
+              { "name": "message", "type": "object", "required": false, "description": "Message properties to override, e.g. adding extra toRecipients beyond the original sender." }
+            ],
+            "response_fields": [],
+            "schema": { "data": "ReplyMessageData", "result": "ReplyMessageResult" }
+          },
+          "send_draft_message": {
+            "doc_file": "messages/send_draft_message.md",
+            "endpoint": "POST /me/messages/{id}/send",
+            "description": "Send a previously created message draft; the message is then saved in the Sent Items folder.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "id", "type": "string", "required": true, "description": "Path parameter — ID of the draft to send, from create_draft_message, create_draft_to_reply, create_draft_to_reply_all, or create_draft_to_forward_message." }
+            ],
+            "response_fields": [],
+            "schema": { "data": "SendDraftMessageData", "result": "SendDraftMessageResult" }
+          },
+          "send_mail": {
+            "doc_file": "messages/send_mail.md",
+            "endpoint": "POST /me/sendMail",
+            "description": "Send the message specified in the request body, composing and sending in a single call without first creating a draft.",
+            "tier": "CREATE",
+            "params": [
+              { "name": "message", "type": "object", "required": true, "description": "Full message resource to send, e.g. subject, body, toRecipients, ccRecipients, attachments." },
+              { "name": "saveToSentItems", "type": "boolean", "required": false, "description": "Whether to save the sent message to Sent Items. Defaults to true." }
+            ],
+            "response_fields": [],
+            "schema": { "data": "SendMailData", "result": "SendMailResult" }
+          }
+        }
+      }
+    }
+  },
+  "resources": {},
+  "prompts": {}
+}

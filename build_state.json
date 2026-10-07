@@ -1,0 +1,26 @@
+{
+  "manifest_server_block": true,
+  "planning": true,
+  "infra": true,
+  "tool_groups": { "users": true, "messages": true },
+  "built_from": {
+    "users": ["get_user.md"],
+    "messages": [
+      "create_draft_message.md",
+      "create_draft_to_forward_message.md",
+      "create_draft_to_reply_all.md",
+      "create_draft_to_reply.md",
+      "forward_message.md",
+      "get_message.md",
+      "list_messages.md",
+      "reply_all_to_a_message.md",
+      "reply_to_a_message.md",
+      "send_draft_message.md",
+      "send_mail.md"
+    ]
+  },
+  "validation_rounds": 1,
+  "validation_passed": true,
+  "docs_status_written": true,
+  "readme": false
+}
