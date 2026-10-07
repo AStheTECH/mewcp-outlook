@@ -1,0 +1,5 @@
+fastmcp                              # no version — direct import (FastMCP, mcp.types), but resolved version is owned by fastmcp-credentials' pin below
+fastmcp-credentials>=0.2.0,<0.3.0     # FastMCP-4-compatible line
+pydantic>=2.12                       # floor raised transitively by fastmcp's SDK v2 dependency
+requests>=2.31.0
+python-json-logger>=2.0.0
