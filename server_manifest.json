@@ -4,7 +4,7 @@
     "name": "mewcp-outlook",
     "package": "outlook_mcp",
     "auth": "oauth",
-    "version": "v1.1.0",
+    "version": "v1.2.0",
     "api_base": "https://graph.microsoft.com/v1.0"
   },
   "tools": {
@@ -1735,6 +1735,1177 @@
             }
           }
         }
+      },
+      "calendars": {
+        "lane": "tools",
+        "group": "calendars",
+        "file": "calendars_tools.py",
+        "doc_source": "calendars/",
+        "register_fn": "register_calendars_tools",
+        "tools": {
+          "list_calendars": {
+            "doc_file": "calendars/list_calendars.md",
+            "endpoint": "GET /me/calendars",
+            "description": "Lists all the signed-in user's calendars, or the calendars in a specific calendar group.",
+            "tier": "GET",
+            "params": [
+              {
+                "name": "select",
+                "type": "str",
+                "required": false,
+                "description": "Comma-separated list of properties to return."
+              },
+              {
+                "name": "calendar_group_id",
+                "type": "str",
+                "required": false,
+                "description": "ID of a calendar group to list calendars from instead of all of the user's calendars."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "value",
+                "type": "list[CalendarListItem]"
+              }
+            ],
+            "schema": {
+              "data": "ListCalendarsData",
+              "result": "ListCalendarsResult"
+            }
+          },
+          "get_calendar": {
+            "doc_file": "calendars/get_calendar.md",
+            "endpoint": "GET /me/calendar",
+            "description": "Gets the properties of the signed-in user's default calendar, or a specific one of their other calendars.",
+            "tier": "GET",
+            "params": [
+              {
+                "name": "id",
+                "type": "str",
+                "required": false,
+                "description": "ID of a specific calendar to get. Omit to get the default calendar."
+              },
+              {
+                "name": "select",
+                "type": "str",
+                "required": false,
+                "description": "Comma-separated list of properties to return."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "id",
+                "type": "str"
+              },
+              {
+                "name": "name",
+                "type": "str"
+              },
+              {
+                "name": "color",
+                "type": "str"
+              },
+              {
+                "name": "isDefaultCalendar",
+                "type": "bool"
+              },
+              {
+                "name": "hexColor",
+                "type": "str"
+              },
+              {
+                "name": "changeKey",
+                "type": "str"
+              },
+              {
+                "name": "canShare",
+                "type": "bool"
+              },
+              {
+                "name": "canViewPrivateItems",
+                "type": "bool"
+              },
+              {
+                "name": "canEdit",
+                "type": "bool"
+              },
+              {
+                "name": "allowedOnlineMeetingProviders",
+                "type": "list[str]"
+              },
+              {
+                "name": "defaultOnlineMeetingProvider",
+                "type": "str"
+              },
+              {
+                "name": "isTallyingResponses",
+                "type": "bool"
+              },
+              {
+                "name": "isRemovable",
+                "type": "bool"
+              },
+              {
+                "name": "owner",
+                "type": "dict"
+              }
+            ],
+            "schema": {
+              "data": "GetCalendarData",
+              "result": "GetCalendarResult"
+            }
+          }
+        },
+        "built_from": [
+          "list_calendars.md",
+          "get_calendar.md"
+        ]
+      },
+      "events": {
+        "lane": "tools",
+        "group": "events",
+        "file": "events_tools.py",
+        "doc_source": "events/",
+        "register_fn": "register_events_tools",
+        "tools": {
+          "list_events": {
+            "doc_file": "events/list_events.md",
+            "endpoint": "GET /me/events",
+            "description": "Lists single-instance meetings and series masters in the signed-in user's mailbox.",
+            "tier": "GET",
+            "params": [
+              {
+                "name": "select",
+                "type": "str",
+                "required": false,
+                "description": "Comma-separated list of properties to return."
+              },
+              {
+                "name": "filter",
+                "type": "str",
+                "required": false,
+                "description": "OData filter expression. Can't be used on the recurrence property."
+              },
+              {
+                "name": "orderby",
+                "type": "str",
+                "required": false,
+                "description": "Property to sort the results by."
+              },
+              {
+                "name": "top",
+                "type": "int",
+                "required": false,
+                "description": "Maximum number of events to return per page."
+              },
+              {
+                "name": "skip",
+                "type": "int",
+                "required": false,
+                "description": "Number of results to skip."
+              },
+              {
+                "name": "timezone",
+                "type": "str",
+                "required": false,
+                "description": "Time zone name sent as the Prefer: outlook.timezone header."
+              },
+              {
+                "name": "body_content_type",
+                "type": "str",
+                "required": false,
+                "description": "Set to 'text' to receive the event body as plain text."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "value",
+                "type": "list[GetEventData]"
+              },
+              {
+                "name": "@odata.nextLink",
+                "type": "str"
+              }
+            ],
+            "schema": {
+              "data": "ListEventsData",
+              "result": "ListEventsResult"
+            }
+          },
+          "create_event": {
+            "doc_file": "events/create_event.md",
+            "endpoint": "POST /me/events",
+            "description": "Creates a new event on the signed-in user's default calendar.",
+            "tier": "CREATE",
+            "params": [
+              {
+                "name": "subject",
+                "type": "str",
+                "required": true,
+                "description": "Subject line of the event."
+              },
+              {
+                "name": "start",
+                "type": "dict",
+                "required": true,
+                "description": "Start time as {dateTime, timeZone}."
+              },
+              {
+                "name": "end",
+                "type": "dict",
+                "required": true,
+                "description": "End time as {dateTime, timeZone}."
+              },
+              {
+                "name": "body",
+                "type": "dict",
+                "required": false,
+                "description": "Event body as {contentType, content}."
+              },
+              {
+                "name": "location",
+                "type": "dict",
+                "required": false,
+                "description": "Location as {displayName, ...}."
+              },
+              {
+                "name": "attendees",
+                "type": "list[dict]",
+                "required": false,
+                "description": "Attendees, each as {emailAddress, type}."
+              },
+              {
+                "name": "allowNewTimeProposals",
+                "type": "bool",
+                "required": false,
+                "description": "Whether invitees may propose a new time."
+              },
+              {
+                "name": "transactionId",
+                "type": "str",
+                "required": false,
+                "description": "Client-generated ID for tracking/idempotency."
+              },
+              {
+                "name": "isOnlineMeeting",
+                "type": "bool",
+                "required": false,
+                "description": "Whether to make this an online meeting."
+              },
+              {
+                "name": "onlineMeetingProvider",
+                "type": "str",
+                "required": false,
+                "description": "Online meeting provider, e.g. teamsForBusiness."
+              },
+              {
+                "name": "recurrence",
+                "type": "dict",
+                "required": false,
+                "description": "Recurrence pattern as {pattern, range}."
+              },
+              {
+                "name": "sensitivity",
+                "type": "str",
+                "required": false,
+                "description": "normal, personal, private, or confidential."
+              },
+              {
+                "name": "showAs",
+                "type": "str",
+                "required": false,
+                "description": "free, tentative, busy, oof, workingElsewhere, or unknown."
+              },
+              {
+                "name": "reminderMinutesBeforeStart",
+                "type": "int",
+                "required": false,
+                "description": "Minutes before start to show a reminder."
+              },
+              {
+                "name": "isReminderOn",
+                "type": "bool",
+                "required": false,
+                "description": "Whether a reminder is set."
+              },
+              {
+                "name": "categories",
+                "type": "list[str]",
+                "required": false,
+                "description": "Category names to assign."
+              },
+              {
+                "name": "hideAttendees",
+                "type": "bool",
+                "required": false,
+                "description": "When true, only the organizer can see attendees."
+              },
+              {
+                "name": "responseRequested",
+                "type": "bool",
+                "required": false,
+                "description": "Whether invitees are asked to respond."
+              },
+              {
+                "name": "timezone",
+                "type": "str",
+                "required": false,
+                "description": "Time zone sent as the Prefer: outlook.timezone header."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "id",
+                "type": "str"
+              },
+              {
+                "name": "subject",
+                "type": "str"
+              },
+              {
+                "name": "bodyPreview",
+                "type": "str"
+              },
+              {
+                "name": "body",
+                "type": "dict"
+              },
+              {
+                "name": "hideAttendees",
+                "type": "bool"
+              },
+              {
+                "name": "start",
+                "type": "dict"
+              },
+              {
+                "name": "end",
+                "type": "dict"
+              },
+              {
+                "name": "location",
+                "type": "dict"
+              },
+              {
+                "name": "locations",
+                "type": "list[dict]"
+              },
+              {
+                "name": "attendees",
+                "type": "list[dict]"
+              },
+              {
+                "name": "organizer",
+                "type": "dict"
+              },
+              {
+                "name": "createdDateTime",
+                "type": "str"
+              },
+              {
+                "name": "lastModifiedDateTime",
+                "type": "str"
+              },
+              {
+                "name": "changeKey",
+                "type": "str"
+              },
+              {
+                "name": "categories",
+                "type": "list[str]"
+              },
+              {
+                "name": "originalStartTimeZone",
+                "type": "str"
+              },
+              {
+                "name": "originalEndTimeZone",
+                "type": "str"
+              },
+              {
+                "name": "iCalUId",
+                "type": "str"
+              },
+              {
+                "name": "reminderMinutesBeforeStart",
+                "type": "int"
+              },
+              {
+                "name": "isReminderOn",
+                "type": "bool"
+              },
+              {
+                "name": "hasAttachments",
+                "type": "bool"
+              },
+              {
+                "name": "importance",
+                "type": "str"
+              },
+              {
+                "name": "sensitivity",
+                "type": "str"
+              },
+              {
+                "name": "isAllDay",
+                "type": "bool"
+              },
+              {
+                "name": "isCancelled",
+                "type": "bool"
+              },
+              {
+                "name": "isDraft",
+                "type": "bool"
+              },
+              {
+                "name": "isOrganizer",
+                "type": "bool"
+              },
+              {
+                "name": "responseRequested",
+                "type": "bool"
+              },
+              {
+                "name": "seriesMasterId",
+                "type": "str"
+              },
+              {
+                "name": "transactionId",
+                "type": "str"
+              },
+              {
+                "name": "showAs",
+                "type": "str"
+              },
+              {
+                "name": "type",
+                "type": "str"
+              },
+              {
+                "name": "webLink",
+                "type": "str"
+              },
+              {
+                "name": "onlineMeetingUrl",
+                "type": "str"
+              },
+              {
+                "name": "isOnlineMeeting",
+                "type": "bool"
+              },
+              {
+                "name": "onlineMeetingProvider",
+                "type": "str"
+              },
+              {
+                "name": "onlineMeeting",
+                "type": "dict"
+              },
+              {
+                "name": "allowNewTimeProposals",
+                "type": "bool"
+              },
+              {
+                "name": "responseStatus",
+                "type": "dict"
+              },
+              {
+                "name": "recurrence",
+                "type": "dict"
+              }
+            ],
+            "schema": {
+              "data": "CreateEventData",
+              "result": "CreateEventResult"
+            }
+          },
+          "get_event": {
+            "doc_file": "events/get_event.md",
+            "endpoint": "GET /me/events/{id}",
+            "description": "Retrieves the full properties of a single event by its id.",
+            "tier": "GET",
+            "params": [
+              {
+                "name": "id",
+                "type": "str",
+                "required": true,
+                "description": "Unique identifier of the event."
+              },
+              {
+                "name": "select",
+                "type": "str",
+                "required": false,
+                "description": "Comma-separated list of properties to return."
+              },
+              {
+                "name": "expand",
+                "type": "str",
+                "required": false,
+                "description": "Related resources to expand inline."
+              },
+              {
+                "name": "timezone",
+                "type": "str",
+                "required": false,
+                "description": "Time zone sent as the Prefer: outlook.timezone header."
+              },
+              {
+                "name": "body_content_type",
+                "type": "str",
+                "required": false,
+                "description": "Set to 'text' to receive the event body as plain text."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "id",
+                "type": "str"
+              },
+              {
+                "name": "subject",
+                "type": "str"
+              },
+              {
+                "name": "bodyPreview",
+                "type": "str"
+              },
+              {
+                "name": "body",
+                "type": "dict"
+              },
+              {
+                "name": "hideAttendees",
+                "type": "bool"
+              },
+              {
+                "name": "start",
+                "type": "dict"
+              },
+              {
+                "name": "end",
+                "type": "dict"
+              },
+              {
+                "name": "location",
+                "type": "dict"
+              },
+              {
+                "name": "locations",
+                "type": "list[dict]"
+              },
+              {
+                "name": "attendees",
+                "type": "list[dict]"
+              },
+              {
+                "name": "organizer",
+                "type": "dict"
+              },
+              {
+                "name": "createdDateTime",
+                "type": "str"
+              },
+              {
+                "name": "lastModifiedDateTime",
+                "type": "str"
+              },
+              {
+                "name": "changeKey",
+                "type": "str"
+              },
+              {
+                "name": "categories",
+                "type": "list[str]"
+              },
+              {
+                "name": "originalStartTimeZone",
+                "type": "str"
+              },
+              {
+                "name": "originalEndTimeZone",
+                "type": "str"
+              },
+              {
+                "name": "iCalUId",
+                "type": "str"
+              },
+              {
+                "name": "reminderMinutesBeforeStart",
+                "type": "int"
+              },
+              {
+                "name": "isReminderOn",
+                "type": "bool"
+              },
+              {
+                "name": "hasAttachments",
+                "type": "bool"
+              },
+              {
+                "name": "importance",
+                "type": "str"
+              },
+              {
+                "name": "sensitivity",
+                "type": "str"
+              },
+              {
+                "name": "isAllDay",
+                "type": "bool"
+              },
+              {
+                "name": "isCancelled",
+                "type": "bool"
+              },
+              {
+                "name": "isDraft",
+                "type": "bool"
+              },
+              {
+                "name": "isOrganizer",
+                "type": "bool"
+              },
+              {
+                "name": "responseRequested",
+                "type": "bool"
+              },
+              {
+                "name": "seriesMasterId",
+                "type": "str"
+              },
+              {
+                "name": "transactionId",
+                "type": "str"
+              },
+              {
+                "name": "showAs",
+                "type": "str"
+              },
+              {
+                "name": "type",
+                "type": "str"
+              },
+              {
+                "name": "webLink",
+                "type": "str"
+              },
+              {
+                "name": "onlineMeetingUrl",
+                "type": "str"
+              },
+              {
+                "name": "isOnlineMeeting",
+                "type": "bool"
+              },
+              {
+                "name": "onlineMeetingProvider",
+                "type": "str"
+              },
+              {
+                "name": "onlineMeeting",
+                "type": "dict"
+              },
+              {
+                "name": "allowNewTimeProposals",
+                "type": "bool"
+              },
+              {
+                "name": "responseStatus",
+                "type": "dict"
+              },
+              {
+                "name": "recurrence",
+                "type": "dict"
+              }
+            ],
+            "schema": {
+              "data": "GetEventData",
+              "result": "GetEventResult"
+            }
+          },
+          "update_event": {
+            "doc_file": "events/update_event.md",
+            "endpoint": "PATCH /me/events/{id}",
+            "description": "Updates fields on an existing event; returns both the before and after state.",
+            "tier": "UPDATE",
+            "params": [
+              {
+                "name": "id",
+                "type": "str",
+                "required": true,
+                "description": "ID of the event to update."
+              },
+              {
+                "name": "subject",
+                "type": "str",
+                "required": false,
+                "description": "Subject line of the event."
+              },
+              {
+                "name": "body",
+                "type": "dict",
+                "required": false,
+                "description": "Event body as {contentType, content}."
+              },
+              {
+                "name": "start",
+                "type": "dict",
+                "required": false,
+                "description": "Start time as {dateTime, timeZone}."
+              },
+              {
+                "name": "end",
+                "type": "dict",
+                "required": false,
+                "description": "End time as {dateTime, timeZone}."
+              },
+              {
+                "name": "location",
+                "type": "dict",
+                "required": false,
+                "description": "Location as {displayName, ...}."
+              },
+              {
+                "name": "locations",
+                "type": "list[dict]",
+                "required": false,
+                "description": "Multiple locations."
+              },
+              {
+                "name": "attendees",
+                "type": "list[dict]",
+                "required": false,
+                "description": "Attendees, each as {emailAddress, type}."
+              },
+              {
+                "name": "categories",
+                "type": "list[str]",
+                "required": false,
+                "description": "Category names."
+              },
+              {
+                "name": "hideAttendees",
+                "type": "bool",
+                "required": false,
+                "description": "When true, only the organizer can see attendees."
+              },
+              {
+                "name": "importance",
+                "type": "str",
+                "required": false,
+                "description": "low, normal, or high."
+              },
+              {
+                "name": "isAllDay",
+                "type": "bool",
+                "required": false,
+                "description": "Whether the event lasts all day."
+              },
+              {
+                "name": "isOnlineMeeting",
+                "type": "bool",
+                "required": false,
+                "description": "Whether this is an online meeting."
+              },
+              {
+                "name": "isReminderOn",
+                "type": "bool",
+                "required": false,
+                "description": "Whether a reminder is set."
+              },
+              {
+                "name": "onlineMeetingProvider",
+                "type": "str",
+                "required": false,
+                "description": "Online meeting provider."
+              },
+              {
+                "name": "recurrence",
+                "type": "dict",
+                "required": false,
+                "description": "Recurrence pattern as {pattern, range}."
+              },
+              {
+                "name": "reminderMinutesBeforeStart",
+                "type": "int",
+                "required": false,
+                "description": "Minutes before start to show a reminder."
+              },
+              {
+                "name": "responseRequested",
+                "type": "bool",
+                "required": false,
+                "description": "Whether invitees are asked to respond."
+              },
+              {
+                "name": "sensitivity",
+                "type": "str",
+                "required": false,
+                "description": "normal, personal, private, or confidential."
+              },
+              {
+                "name": "showAs",
+                "type": "str",
+                "required": false,
+                "description": "free, tentative, busy, oof, workingElsewhere, or unknown."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "before",
+                "type": "GetEventData"
+              },
+              {
+                "name": "after",
+                "type": "GetEventData"
+              }
+            ],
+            "schema": {
+              "data": "UpdateEventData",
+              "result": "UpdateEventResult"
+            }
+          },
+          "delete_event": {
+            "doc_file": "events/delete_event.md",
+            "endpoint": "DELETE /me/events/{id}",
+            "description": "DESTRUCTIVE. Deletes an event by moving it to Deleted Items.",
+            "tier": "DELETE",
+            "params": [
+              {
+                "name": "id",
+                "type": "str",
+                "required": true,
+                "description": "ID of the event to delete."
+              }
+            ],
+            "response_fields": [],
+            "schema": {
+              "data": "DeleteEventData",
+              "result": "DeleteEventResult"
+            }
+          },
+          "cancel_event": {
+            "doc_file": "events/cancel_event.md",
+            "endpoint": "POST /me/events/{id}/cancel",
+            "description": "DESTRUCTIVE. Sends a cancellation message from the organizer to all attendees and cancels the meeting.",
+            "tier": "DELETE",
+            "params": [
+              {
+                "name": "id",
+                "type": "str",
+                "required": true,
+                "description": "ID of the event to cancel."
+              },
+              {
+                "name": "comment",
+                "type": "str",
+                "required": false,
+                "description": "Message to send to attendees explaining the cancellation."
+              }
+            ],
+            "response_fields": [],
+            "schema": {
+              "data": "CancelEventData",
+              "result": "CancelEventResult"
+            }
+          },
+          "accept_event": {
+            "doc_file": "events/accept_event.md",
+            "endpoint": "POST /me/events/{id}/accept",
+            "description": "Accepts an event invitation on the signed-in user's calendar.",
+            "tier": "UPDATE",
+            "params": [
+              {
+                "name": "id",
+                "type": "str",
+                "required": true,
+                "description": "ID of the event to accept."
+              },
+              {
+                "name": "comment",
+                "type": "str",
+                "required": false,
+                "description": "Message to send with the response."
+              },
+              {
+                "name": "sendResponse",
+                "type": "bool",
+                "required": false,
+                "description": "Whether to send a response to the organizer."
+              }
+            ],
+            "response_fields": [],
+            "schema": {
+              "data": "AcceptEventData",
+              "result": "AcceptEventResult"
+            }
+          },
+          "tentatively_accept_event": {
+            "doc_file": "events/tentatively_accept_event.md",
+            "endpoint": "POST /me/events/{id}/tentativelyAccept",
+            "description": "Tentatively accepts an event invitation on the signed-in user's calendar, optionally proposing a new time.",
+            "tier": "UPDATE",
+            "params": [
+              {
+                "name": "id",
+                "type": "str",
+                "required": true,
+                "description": "ID of the event to tentatively accept."
+              },
+              {
+                "name": "comment",
+                "type": "str",
+                "required": false,
+                "description": "Message to send with the response."
+              },
+              {
+                "name": "sendResponse",
+                "type": "bool",
+                "required": false,
+                "description": "Whether to send a response to the organizer."
+              },
+              {
+                "name": "proposedNewTime",
+                "type": "dict",
+                "required": false,
+                "description": "A new time to propose, as {start, end}."
+              }
+            ],
+            "response_fields": [],
+            "schema": {
+              "data": "TentativelyAcceptEventData",
+              "result": "TentativelyAcceptEventResult"
+            }
+          },
+          "decline_event": {
+            "doc_file": "events/decline_event.md",
+            "endpoint": "POST /me/events/{id}/decline",
+            "description": "Declines an event invitation on the signed-in user's calendar, optionally proposing a new time.",
+            "tier": "UPDATE",
+            "params": [
+              {
+                "name": "id",
+                "type": "str",
+                "required": true,
+                "description": "ID of the event to decline."
+              },
+              {
+                "name": "comment",
+                "type": "str",
+                "required": false,
+                "description": "Message to send with the response."
+              },
+              {
+                "name": "sendResponse",
+                "type": "bool",
+                "required": false,
+                "description": "Whether to send a response to the organizer."
+              },
+              {
+                "name": "proposedNewTime",
+                "type": "dict",
+                "required": false,
+                "description": "A new time to propose, as {start, end}."
+              }
+            ],
+            "response_fields": [],
+            "schema": {
+              "data": "DeclineEventData",
+              "result": "DeclineEventResult"
+            }
+          },
+          "find_meeting_times": {
+            "doc_file": "events/find_meeting_times.md",
+            "endpoint": "POST /me/findMeetingTimes",
+            "description": "Finds candidate meeting times based on attendee availability, location, and time constraints.",
+            "tier": "GET",
+            "params": [
+              {
+                "name": "attendees",
+                "type": "list[dict]",
+                "required": false,
+                "description": "Attendees to check availability for."
+              },
+              {
+                "name": "isOrganizerOptional",
+                "type": "bool",
+                "required": false,
+                "description": "Whether the organizer's availability can be ignored."
+              },
+              {
+                "name": "locationConstraint",
+                "type": "dict",
+                "required": false,
+                "description": "Location requirements."
+              },
+              {
+                "name": "maxCandidates",
+                "type": "int",
+                "required": false,
+                "description": "Maximum number of suggestions to return."
+              },
+              {
+                "name": "meetingDuration",
+                "type": "str",
+                "required": false,
+                "description": "Meeting duration as an ISO 8601 duration."
+              },
+              {
+                "name": "minimumAttendeePercentage",
+                "type": "float",
+                "required": false,
+                "description": "Minimum percentage of attendees that must be available."
+              },
+              {
+                "name": "returnSuggestionReasons",
+                "type": "bool",
+                "required": false,
+                "description": "Whether to include a suggestionReason on each result."
+              },
+              {
+                "name": "timeConstraint",
+                "type": "dict",
+                "required": false,
+                "description": "Time window(s) to search within."
+              },
+              {
+                "name": "timezone",
+                "type": "str",
+                "required": false,
+                "description": "Time zone sent as the Prefer: outlook.timezone header."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "emptySuggestionsReason",
+                "type": "str"
+              },
+              {
+                "name": "meetingTimeSuggestions",
+                "type": "list[MeetingTimeSuggestion]"
+              }
+            ],
+            "schema": {
+              "data": "FindMeetingTimesData",
+              "result": "FindMeetingTimesResult"
+            }
+          },
+          "get_free_busy_schedule": {
+            "doc_file": "events/get_free_busy_schedule.md",
+            "endpoint": "POST /me/calendar/getSchedule",
+            "description": "Gets free/busy availability for a set of users, distribution lists, or resources over a specified time period.",
+            "tier": "GET",
+            "params": [
+              {
+                "name": "schedules",
+                "type": "list[str]",
+                "required": true,
+                "description": "Email addresses of the users, distribution lists, or resources to check."
+              },
+              {
+                "name": "startTime",
+                "type": "dict",
+                "required": true,
+                "description": "Start of the period as {dateTime, timeZone}."
+              },
+              {
+                "name": "endTime",
+                "type": "dict",
+                "required": true,
+                "description": "End of the period as {dateTime, timeZone}."
+              },
+              {
+                "name": "availabilityViewInterval",
+                "type": "int",
+                "required": false,
+                "description": "Duration in minutes of each slot in the returned availabilityView."
+              },
+              {
+                "name": "timezone",
+                "type": "str",
+                "required": false,
+                "description": "Time zone sent as the Prefer: outlook.timezone header."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "value",
+                "type": "list[ScheduleInformation]"
+              }
+            ],
+            "schema": {
+              "data": "GetFreeBusyScheduleData",
+              "result": "GetFreeBusyScheduleResult"
+            }
+          },
+          "list_calendar_view": {
+            "doc_file": "events/list_calendar_view.md",
+            "endpoint": "GET /me/calendar/calendarView",
+            "description": "Gets events for a date range, expanding recurring series into individual occurrence instances.",
+            "tier": "GET",
+            "params": [
+              {
+                "name": "startDateTime",
+                "type": "str",
+                "required": true,
+                "description": "Start of the time range, ISO 8601."
+              },
+              {
+                "name": "endDateTime",
+                "type": "str",
+                "required": true,
+                "description": "End of the time range, ISO 8601."
+              },
+              {
+                "name": "select",
+                "type": "str",
+                "required": false,
+                "description": "Comma-separated list of properties to return."
+              },
+              {
+                "name": "timezone",
+                "type": "str",
+                "required": false,
+                "description": "Time zone sent as the Prefer: outlook.timezone header."
+              },
+              {
+                "name": "body_content_type",
+                "type": "str",
+                "required": false,
+                "description": "Set to 'text' to receive the event body as plain text."
+              }
+            ],
+            "response_fields": [
+              {
+                "name": "value",
+                "type": "list[GetEventData]"
+              },
+              {
+                "name": "@odata.nextLink",
+                "type": "str"
+              }
+            ],
+            "schema": {
+              "data": "ListCalendarViewData",
+              "result": "ListCalendarViewResult"
+            }
+          }
+        },
+        "built_from": [
+          "list_events.md",
+          "create_event.md",
+          "get_event.md",
+          "update_event.md",
+          "delete_event.md",
+          "cancel_event.md",
+          "accept_event.md",
+          "tentatively_accept_event.md",
+          "decline_event.md",
+          "find_meeting_times.md",
+          "get_free_busy_schedule.md",
+          "list_calendar_view.md"
+        ]
       }
     }
   },
