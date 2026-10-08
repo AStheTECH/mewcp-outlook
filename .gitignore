@@ -11,3 +11,4 @@ env/
 /.python-version
 *.lock
 *_api_docs/
+oauth.json

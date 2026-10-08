@@ -191,3 +191,82 @@ class SendMailData(BaseModel):
 
 class SendMailResult(ToolResult):
     data: SendMailData | None = None
+
+
+class UpdateMessageData(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    before: GetMessageData
+    after: GetMessageData
+
+
+class UpdateMessageResult(ToolResult):
+    data: UpdateMessageData | None = None
+
+
+class DeleteMessageData(BaseModel):
+    """Graph returns 204 No Content for this endpoint."""
+
+    model_config = ConfigDict(extra="allow")
+
+
+class DeleteMessageResult(ToolResult):
+    data: DeleteMessageData | None = None
+
+
+class CopyMessageData(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    id: str | None = Field(default=None, description="Unique identifier of the new copy, in the destination folder.")
+    parentFolderId: str | None = None
+    receivedDateTime: str | None = None
+    sentDateTime: str | None = None
+    hasAttachments: bool | None = None
+    subject: str | None = None
+    body: dict[str, Any] | None = None
+    bodyPreview: str | None = None
+
+
+class CopyMessageResult(ToolResult):
+    data: CopyMessageData | None = None
+
+
+class GetMessageDeltaData(BaseModel):
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    value: list[dict[str, Any]] = Field(default_factory=list)
+    odata_next_link: str | None = Field(
+        default=None,
+        alias="@odata.nextLink",
+        description="Present when more changes remain to page through in this round.",
+    )
+    odata_delta_link: str | None = Field(
+        default=None,
+        alias="@odata.deltaLink",
+        description="Present when this round of change tracking is complete; save it to start the next round.",
+    )
+
+
+class GetMessageDeltaResult(ToolResult):
+    data: GetMessageDeltaData | None = None
+
+
+class MoveMessageData(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    before: GetMessageData
+    after: GetMessageData
+
+
+class MoveMessageResult(ToolResult):
+    data: MoveMessageData | None = None
+
+
+class PermanentlyDeleteMessageData(BaseModel):
+    """Graph returns 204 No Content for this endpoint."""
+
+    model_config = ConfigDict(extra="allow")
+
+
+class PermanentlyDeleteMessageResult(ToolResult):
+    data: PermanentlyDeleteMessageData | None = None

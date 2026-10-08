@@ -1,6 +1,8 @@
 """Messages group: create_draft_message, create_draft_to_forward_message,
 create_draft_to_reply_all, create_draft_to_reply, forward_message, get_message,
-list_messages, reply_all_message, reply_message, send_draft_message, send_mail."""
+list_messages, reply_all_message, reply_message, send_draft_message, send_mail,
+update_message, delete_message, copy_message, get_message_delta, move_message,
+permanently_delete_message."""
 
 import logging
 from typing import Any
@@ -13,6 +15,8 @@ from .. import service
 from ..config import CONNECT_TIMEOUT, READ_TIMEOUT
 from ..logging_utils import ToolLogger
 from ..schemas.messages import (
+    CopyMessageData,
+    CopyMessageResult,
     CreateDraftMessageData,
     CreateDraftMessageResult,
     CreateDraftToForwardMessageData,
@@ -21,12 +25,20 @@ from ..schemas.messages import (
     CreateDraftToReplyAllResult,
     CreateDraftToReplyData,
     CreateDraftToReplyResult,
+    DeleteMessageData,
+    DeleteMessageResult,
     ForwardMessageData,
     ForwardMessageResult,
     GetMessageData,
+    GetMessageDeltaData,
+    GetMessageDeltaResult,
     GetMessageResult,
     ListMessagesData,
     ListMessagesResult,
+    MoveMessageData,
+    MoveMessageResult,
+    PermanentlyDeleteMessageData,
+    PermanentlyDeleteMessageResult,
     ReplyAllMessageData,
     ReplyAllMessageResult,
     ReplyMessageData,
@@ -35,6 +47,8 @@ from ..schemas.messages import (
     SendDraftMessageResult,
     SendMailData,
     SendMailResult,
+    UpdateMessageData,
+    UpdateMessageResult,
 )
 from ._helpers import _err, _handle_request_exc, _upstream_err
 
@@ -581,3 +595,283 @@ def register_messages_tools(mcp: FastMCP) -> None:
             return _upstream_err(SendMailResult, tlog, status, data, retry_after)
         except Exception as exc:
             return _handle_request_exc(SendMailResult, tlog, exc)
+
+    @mcp.tool(
+        name="update_message",
+        description=(
+            "Updates fields on an existing message — most body/recipient/subject fields are "
+            "updatable only while the message is still a draft. Supply only the fields to "
+            "change; others keep their current value. NOTE: this overwrites the current field "
+            "values and the prior state isn't stored by the API after the call; the response "
+            "includes both the before and after state so you have a full record of what changed."
+        ),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
+    )
+    def update_message(
+        id: str = Field(description="ID of the message to update."),
+        bccRecipients: list[dict[str, Any]] | None = Field(default=None, description="The Bcc recipients for the message. Updatable only if isDraft is true. Omit to leave unchanged."),
+        body: dict[str, Any] | None = Field(default=None, description="The body of the message ({contentType, content}). Updatable only if isDraft is true. Omit to leave unchanged."),
+        categories: list[str] | None = Field(default=None, description="The categories associated with the message. Omit to leave unchanged."),
+        ccRecipients: list[dict[str, Any]] | None = Field(default=None, description="The Cc recipients for the message. Updatable only if isDraft is true. Omit to leave unchanged."),
+        flag: dict[str, Any] | None = Field(default=None, description="Follow-up flag state, e.g. {flagStatus: 'notFlagged' | 'flagged' | 'complete'}. Omit to leave unchanged."),
+        from_: dict[str, Any] | None = Field(default=None, description="The mailbox owner and sender, sent to the API as `from`; must correspond to the actual mailbox used. Omit to leave unchanged."),
+        importance: str | None = Field(default=None, description="Low, Normal, or High. Omit to leave unchanged."),
+        inferenceClassification: str | None = Field(default=None, description="focused or other. Omit to leave unchanged."),
+        internetMessageId: str | None = Field(default=None, description="The message ID per RFC2822. Updatable only if isDraft is true. Omit to leave unchanged."),
+        isDeliveryReceiptRequested: bool | None = Field(default=None, description="Whether a delivery receipt is requested for the message. Omit to leave unchanged."),
+        isRead: bool | None = Field(default=None, description="Whether the message has been read. Omit to leave unchanged."),
+        isReadReceiptRequested: bool | None = Field(default=None, description="Whether a read receipt is requested for the message. Omit to leave unchanged."),
+        multiValueExtendedProperties: list[dict[str, Any]] | None = Field(default=None, description="Multi-value extended properties. Updatable only if isDraft is true. Omit to leave unchanged."),
+        replyTo: list[dict[str, Any]] | None = Field(default=None, description="Email addresses to use when replying. Updatable only if isDraft is true. Omit to leave unchanged."),
+        sender: dict[str, Any] | None = Field(default=None, description="The account actually used to generate the message; must correspond to the actual mailbox used. Omit to leave unchanged."),
+        singleValueExtendedProperties: list[dict[str, Any]] | None = Field(default=None, description="Single-value extended properties. Updatable only if isDraft is true. Omit to leave unchanged."),
+        subject: str | None = Field(default=None, description="The subject of the message. Updatable only if isDraft is true. Omit to leave unchanged."),
+        toRecipients: list[dict[str, Any]] | None = Field(default=None, description="The To recipients for the message. Updatable only if isDraft is true. Omit to leave unchanged."),
+    ) -> UpdateMessageResult:
+        tlog = ToolLogger(logger, "update_message")
+
+        fields = {
+            "bccRecipients": bccRecipients, "body": body, "categories": categories,
+            "ccRecipients": ccRecipients, "flag": flag, "from": from_, "importance": importance,
+            "inferenceClassification": inferenceClassification, "internetMessageId": internetMessageId,
+            "isDeliveryReceiptRequested": isDeliveryReceiptRequested, "isRead": isRead,
+            "isReadReceiptRequested": isReadReceiptRequested,
+            "multiValueExtendedProperties": multiValueExtendedProperties, "replyTo": replyTo,
+            "sender": sender, "singleValueExtendedProperties": singleValueExtendedProperties,
+            "subject": subject, "toRecipients": toRecipients,
+        }
+        payload = {k: v for k, v in fields.items() if v is not None}
+        if not payload:
+            return _err(UpdateMessageResult, tlog, "VALIDATION_ERROR",
+                        "at least one field to change must be provided", 400)
+
+        try:
+            before_data, before_status, before_retry = service.api_request(
+                "GET", f"/me/messages/{id}", timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+            )
+            if not (200 <= before_status < 300):
+                return _upstream_err(UpdateMessageResult, tlog, before_status, before_data, before_retry)
+            before = GetMessageData(**before_data)
+
+            after_data, after_status, after_retry = service.api_request(
+                "PATCH", f"/me/messages/{id}", body=payload, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+            )
+            if not (200 <= after_status < 300):
+                return _upstream_err(UpdateMessageResult, tlog, after_status, after_data, after_retry)
+            after = GetMessageData(**after_data)
+
+            tlog.success()
+            return UpdateMessageResult(success=True, statusCode=200, data=UpdateMessageData(before=before, after=after))
+        except Exception as exc:
+            return _handle_request_exc(UpdateMessageResult, tlog, exc)
+
+    @mcp.tool(
+        name="delete_message",
+        description=(
+            "DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. "
+            "Deletes a message by moving it to Deleted Items. This is a soft delete — the "
+            "message is recoverable from Deleted Items, though items already in the recoverable "
+            "items deletions folder may not be deletable this way. For an unrecoverable delete "
+            "use permanently_delete_message; to relocate instead of deleting, use move_message. "
+            "NEVER call this tool autonomously or as part of an automated flow. You MUST stop, "
+            "tell the user exactly which message will be deleted, and wait for their explicit "
+            "written confirmation before proceeding."
+        ),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, openWorldHint=True),
+    )
+    def delete_message(
+        id: str = Field(description="ID of the message to delete."),
+    ) -> DeleteMessageResult:
+        tlog = ToolLogger(logger, "delete_message")
+
+        try:
+            data, status, retry_after = service.api_request(
+                "DELETE", f"/me/messages/{id}", timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+            )
+            if 200 <= status < 300:
+                tlog.success()
+                return DeleteMessageResult(success=True, statusCode=status, data=DeleteMessageData())
+            return _upstream_err(DeleteMessageResult, tlog, status, data, retry_after)
+        except Exception as exc:
+            return _handle_request_exc(DeleteMessageResult, tlog, exc)
+
+    @mcp.tool(
+        name="copy_message",
+        description=(
+            "Copies a message to a destination folder, leaving the original message untouched "
+            "at its original id. Returns the new copy, which gets its own id in the destination "
+            "folder."
+        ),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
+    )
+    def copy_message(
+        id: str = Field(description="ID of the message to copy."),
+        destinationId: str = Field(description="The destination folder's ID, or a well-known folder name."),
+    ) -> CopyMessageResult:
+        tlog = ToolLogger(logger, "copy_message")
+
+        payload = {"destinationId": destinationId}
+
+        try:
+            data, status, retry_after = service.api_request(
+                "POST", f"/me/messages/{id}/copy", body=payload, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+            )
+            if 200 <= status < 300:
+                tlog.success()
+                return CopyMessageResult(success=True, statusCode=status, data=CopyMessageData(**data))
+            return _upstream_err(CopyMessageResult, tlog, status, data, retry_after)
+        except Exception as exc:
+            return _handle_request_exc(CopyMessageResult, tlog, exc)
+
+    @mcp.tool(
+        name="get_message_delta",
+        description=(
+            "Gets messages added, updated, or deleted in a mail folder since the last sync "
+            "round, returning a page of changes plus either `odata_next_link` (more pages in "
+            "this round) or `odata_delta_link` (round complete — save it to start the next "
+            "round). A deleted entry appears with `@removed`/`reason: deleted`; folder-level "
+            "sync can also emit entries that don't reflect an actual change to the message itself."
+        ),
+        annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=True),
+    )
+    def get_message_delta(
+        id: str = Field(description="The mail folder to track changes in (a folder ID, or a well-known folder name such as inbox)."),
+        deltatoken: str | None = Field(
+            default=None,
+            description="State token from the previous delta call's @odata.deltaLink, to start the next round of change tracking. Omit to start a new round.",
+        ),
+        skiptoken: str | None = Field(
+            default=None,
+            description="State token from the previous delta call's @odata.nextLink, to continue the current round. Omit if not continuing a page.",
+        ),
+        changeType: str | None = Field(
+            default=None,
+            description="Filter by change type: created, updated, or deleted. Must be set on the initial call of a round. Omit to receive all change types.",
+        ),
+        select: str | None = Field(
+            default=None,
+            description="Comma-separated fields to return; id is always returned. Must be set on the initial call of a round. Omit to use the default property set.",
+        ),
+        top: int | None = Field(
+            default=None,
+            description="Maximum items to return per page. Must be set on the initial call of a round. Omit to use the API default.",
+        ),
+        expand: str | None = Field(
+            default=None,
+            description="Related resources to expand inline. Must be set on the initial call of a round. Omit to expand nothing.",
+        ),
+        filter: str | None = Field(
+            default=None,
+            description="Only \"receivedDateTime ge {value}\" or \"receivedDateTime gt {value}\" is supported. Must be set on the initial call of a round. Omit to apply no filter.",
+        ),
+        orderby: str | None = Field(
+            default=None,
+            description="Only \"receivedDateTime desc\" is supported; otherwise return order isn't guaranteed. Must be set on the initial call of a round. Omit to use the API's default ordering.",
+        ),
+        max_page_size: int | None = Field(
+            default=None,
+            description="Sent as the Prefer: odata.maxpagesize={value} header, capping how many messages are returned per page. Omit to use the API default.",
+        ),
+    ) -> GetMessageDeltaResult:
+        tlog = ToolLogger(logger, "get_message_delta")
+
+        params: dict[str, Any] = {}
+        if deltatoken is not None:
+            params["$deltatoken"] = deltatoken
+        if skiptoken is not None:
+            params["$skiptoken"] = skiptoken
+        if changeType is not None:
+            params["changeType"] = changeType
+        if select is not None:
+            params["$select"] = select
+        if top is not None:
+            params["$top"] = top
+        if expand is not None:
+            params["$expand"] = expand
+        if filter is not None:
+            params["$filter"] = filter
+        if orderby is not None:
+            params["$orderby"] = orderby
+
+        headers = {"Prefer": f"odata.maxpagesize={max_page_size}"} if max_page_size is not None else None
+
+        try:
+            data, status, retry_after = service.api_request(
+                "GET", f"/me/mailFolders/{id}/messages/delta", params=params or None, extra_headers=headers,
+                timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+            )
+            if 200 <= status < 300:
+                tlog.success()
+                return GetMessageDeltaResult(success=True, statusCode=status, data=GetMessageDeltaData(**data))
+            return _upstream_err(GetMessageDeltaResult, tlog, status, data, retry_after)
+        except Exception as exc:
+            return _handle_request_exc(GetMessageDeltaResult, tlog, exc)
+
+    @mcp.tool(
+        name="move_message",
+        description=(
+            "Moves a message to a destination folder. This creates a new copy of the message "
+            "there and removes the original — the id the message had before the move stops "
+            "being valid. NOTE: the original is not preserved after the call; the response "
+            "includes both the before and after state so you have a full record of what changed."
+        ),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
+    )
+    def move_message(
+        id: str = Field(description="ID of the message to move."),
+        destinationId: str = Field(description="The destination folder's ID, or a well-known folder name (e.g. deleteditems)."),
+    ) -> MoveMessageResult:
+        tlog = ToolLogger(logger, "move_message")
+
+        try:
+            before_data, before_status, before_retry = service.api_request(
+                "GET", f"/me/messages/{id}", timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+            )
+            if not (200 <= before_status < 300):
+                return _upstream_err(MoveMessageResult, tlog, before_status, before_data, before_retry)
+            before = GetMessageData(**before_data)
+
+            after_data, after_status, after_retry = service.api_request(
+                "POST", f"/me/messages/{id}/move", body={"destinationId": destinationId},
+                timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+            )
+            if not (200 <= after_status < 300):
+                return _upstream_err(MoveMessageResult, tlog, after_status, after_data, after_retry)
+            after = GetMessageData(**after_data)
+
+            tlog.success()
+            return MoveMessageResult(success=True, statusCode=200, data=MoveMessageData(before=before, after=after))
+        except Exception as exc:
+            return _handle_request_exc(MoveMessageResult, tlog, exc)
+
+    @mcp.tool(
+        name="permanently_delete_message",
+        description=(
+            "DESTRUCTIVE — REQUIRES EXPLICIT USER CONFIRMATION BEFORE CALLING. "
+            "Permanently deletes a message into the mailbox's purges folder, bypassing Deleted "
+            "Items entirely. This is harder than delete_message, and the message becomes "
+            "unrecoverable once any retention hold expires. NEVER call this tool autonomously or "
+            "as part of an automated flow. You MUST stop, tell the user exactly which message "
+            "will be permanently deleted, and wait for their explicit written confirmation "
+            "before proceeding."
+        ),
+        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True, openWorldHint=True),
+    )
+    def permanently_delete_message(
+        user_id: str = Field(description="The mailbox owner's user ID or user principal name."),
+        id: str = Field(description="ID of the message to permanently delete."),
+    ) -> PermanentlyDeleteMessageResult:
+        tlog = ToolLogger(logger, "permanently_delete_message")
+
+        try:
+            data, status, retry_after = service.api_request(
+                "POST", f"/users/{user_id}/messages/{id}/permanentDelete",
+                timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
+            )
+            if 200 <= status < 300:
+                tlog.success()
+                return PermanentlyDeleteMessageResult(
+                    success=True, statusCode=status, data=PermanentlyDeleteMessageData())
+            return _upstream_err(PermanentlyDeleteMessageResult, tlog, status, data, retry_after)
+        except Exception as exc:
+            return _handle_request_exc(PermanentlyDeleteMessageResult, tlog, exc)
