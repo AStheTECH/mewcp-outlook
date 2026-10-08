@@ -90,16 +90,6 @@ class DeleteUserResult(ToolResult):
     data: DeleteUserData | None = None
 
 
-class RevokeSignInSessionsData(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
-    value: bool | None = None
-
-
-class RevokeSignInSessionsResult(ToolResult):
-    data: RevokeSignInSessionsData | None = None
-
-
 class GetUsersDeltaData(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
@@ -118,13 +108,3 @@ class GetUsersDeltaData(BaseModel):
 
 class GetUsersDeltaResult(ToolResult):
     data: GetUsersDeltaData | None = None
-
-
-class ChangePasswordData(BaseModel):
-    """Graph returns 204 No Content for this endpoint."""
-
-    model_config = ConfigDict(extra="allow")
-
-
-class ChangePasswordResult(ToolResult):
-    data: ChangePasswordData | None = None

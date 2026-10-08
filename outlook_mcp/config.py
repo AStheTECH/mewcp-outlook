@@ -9,9 +9,7 @@ BREAKING_CHANGES: list[dict] = []
 SCOPES = [
     "https://graph.microsoft.com/User.Read",                     # users.get_user
     "https://graph.microsoft.com/User.ReadBasic.All",             # users.list_users, get_users_delta
-    "https://graph.microsoft.com/User.ReadWrite.All",             # users: create_user, update_user, delete_user, admin-target update_user/revoke_sign_in_sessions
-    "https://graph.microsoft.com/User.RevokeSessions.All",        # users.revoke_sign_in_sessions
-    "https://graph.microsoft.com/User-PasswordProfile.ReadWrite.All",  # users.change_password
+    "https://graph.microsoft.com/User.ReadWrite.All",             # users: create_user, update_user, delete_user, admin-target update_user
     "https://graph.microsoft.com/Directory.ReadWrite.All",        # users: delete_user, admin-target update_user
     "https://graph.microsoft.com/Mail.ReadWrite",                 # messages: list/get/create draft/forward/reply/update/delete/copy/move/delta
     "https://graph.microsoft.com/Mail.Send",                      # messages: send_mail, send_draft_message, forward/reply

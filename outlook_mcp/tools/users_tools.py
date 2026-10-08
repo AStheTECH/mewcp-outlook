@@ -1,5 +1,5 @@
 """Users group: get_user, list_users, create_user, update_user, delete_user,
-revoke_sign_in_sessions, get_users_delta, change_password."""
+get_users_delta."""
 
 import logging
 from typing import Any
@@ -12,8 +12,6 @@ from .. import service
 from ..config import CONNECT_TIMEOUT, READ_TIMEOUT
 from ..logging_utils import ToolLogger
 from ..schemas.users import (
-    ChangePasswordData,
-    ChangePasswordResult,
     CreateUserData,
     CreateUserResult,
     DeleteUserData,
@@ -22,8 +20,6 @@ from ..schemas.users import (
     GetUsersDeltaResult,
     ListUsersData,
     ListUsersResult,
-    RevokeSignInSessionsData,
-    RevokeSignInSessionsResult,
     UpdateUserData,
     UpdateUserResult,
     UserData,
@@ -356,43 +352,6 @@ def register_users_tools(mcp: FastMCP) -> None:
             return _handle_request_exc(DeleteUserResult, tlog, exc)
 
     @mcp.tool(
-        name="revoke_sign_in_sessions",
-        description=(
-            "Revokes all of the signed-in user's refresh and session tokens issued to applications, "
-            "or another user's when `user_id` is given (requires higher-privileged admin "
-            "permissions), forcing re-authentication everywhere. There can be a delay of a few "
-            "minutes before tokens are actually revoked, and this call can't be undone. Returns "
-            "whether the revocation succeeded."
-        ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
-    )
-    def revoke_sign_in_sessions(
-        user_id: str | None = Field(
-            default=None,
-            description=(
-                "id (GUID) or userPrincipalName of another user to revoke sessions for instead of "
-                "the signed-in user. Requires User.RevokeSessions.All or higher. Omit to revoke "
-                "your own sessions."
-            ),
-        ),
-    ) -> RevokeSignInSessionsResult:
-        tlog = ToolLogger(logger, "revoke_sign_in_sessions")
-
-        target = f"/users/{user_id}/revokeSignInSessions" if user_id else "/me/revokeSignInSessions"
-
-        try:
-            data, status, retry_after = service.api_request(
-                "POST", target, body=None, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
-            )
-            if 200 <= status < 300:
-                tlog.success()
-                return RevokeSignInSessionsResult(
-                    success=True, statusCode=status, data=RevokeSignInSessionsData(**data))
-            return _upstream_err(RevokeSignInSessionsResult, tlog, status, data, retry_after)
-        except Exception as exc:
-            return _handle_request_exc(RevokeSignInSessionsResult, tlog, exc)
-
-    @mcp.tool(
         name="get_users_delta",
         description=(
             "Gets incremental changes to user objects since the last delta query, returning changed "
@@ -461,31 +420,3 @@ def register_users_tools(mcp: FastMCP) -> None:
             return _upstream_err(GetUsersDeltaResult, tlog, status, data, retry_after)
         except Exception as exc:
             return _handle_request_exc(GetUsersDeltaResult, tlog, exc)
-
-    @mcp.tool(
-        name="change_password",
-        description=(
-            "Updates the signed-in user's own password. This action can't be undone and the "
-            "previous password isn't recoverable from the API after the call. Returns no content "
-            "on success."
-        ),
-        annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=True),
-    )
-    def change_password(
-        currentPassword: str = Field(description="The user's current password."),
-        newPassword: str = Field(description="The new password to set."),
-    ) -> ChangePasswordResult:
-        tlog = ToolLogger(logger, "change_password")
-
-        payload = {"currentPassword": currentPassword, "newPassword": newPassword}
-
-        try:
-            data, status, retry_after = service.api_request(
-                "POST", "/me/changePassword", body=payload, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT),
-            )
-            if 200 <= status < 300:
-                tlog.success()
-                return ChangePasswordResult(success=True, statusCode=status, data=ChangePasswordData())
-            return _upstream_err(ChangePasswordResult, tlog, status, data, retry_after)
-        except Exception as exc:
-            return _handle_request_exc(ChangePasswordResult, tlog, exc)

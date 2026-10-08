@@ -568,30 +568,6 @@
               "result": "DeleteUserResult"
             }
           },
-          "revoke_sign_in_sessions": {
-            "doc_file": "users/revoke_sign_in_sessions.md",
-            "endpoint": "POST /me/revokeSignInSessions (or POST /users/{user_id}/revokeSignInSessions when user_id is given)",
-            "description": "Revokes all of the signed-in user's refresh and session tokens issued to applications, or another user's when user_id is given (requires higher-privileged admin permissions), forcing re-authentication everywhere, and returns whether the revocation succeeded.",
-            "tier": "UPDATE",
-            "params": [
-              {
-                "name": "user_id",
-                "type": "str",
-                "required": false,
-                "description": "id (GUID) or userPrincipalName of another user to revoke sessions for instead of the signed-in user. Requires User.RevokeSessions.All or higher. Omit to revoke your own sessions."
-              }
-            ],
-            "response_fields": [
-              {
-                "name": "value",
-                "type": "Boolean"
-              }
-            ],
-            "schema": {
-              "data": "RevokeSignInSessionsData",
-              "result": "RevokeSignInSessionsResult"
-            }
-          },
           "get_users_delta": {
             "doc_file": "users/get_users_delta.md",
             "endpoint": "GET /users/delta",
@@ -686,31 +662,6 @@
             "schema": {
               "data": "GetUsersDeltaData",
               "result": "GetUsersDeltaResult"
-            }
-          },
-          "change_password": {
-            "doc_file": "users/change_password.md",
-            "endpoint": "POST /me/changePassword",
-            "description": "Updates the signed-in user's own password; returns no content on success.",
-            "tier": "UPDATE",
-            "params": [
-              {
-                "name": "currentPassword",
-                "type": "str",
-                "required": true,
-                "description": "The user's current password."
-              },
-              {
-                "name": "newPassword",
-                "type": "str",
-                "required": true,
-                "description": "The new password to set."
-              }
-            ],
-            "response_fields": [],
-            "schema": {
-              "data": "ChangePasswordData",
-              "result": "ChangePasswordResult"
             }
           }
         }
