@@ -125,6 +125,9 @@ def register_users_tools(mcp: FastMCP) -> None:
     ) -> ListUsersResult:
         tlog = ToolLogger(logger, "list_users")
 
+        if top is not None and (top < 1 or top > 999):
+            return _err(ListUsersResult, tlog, "VALIDATION_ERROR", "top must be between 1 and 999", 400)
+
         params: dict[str, Any] = {}
         if select is not None:
             params["$select"] = select
@@ -429,7 +432,7 @@ def register_users_tools(mcp: FastMCP) -> None:
             description=(
                 "When true, sends the Prefer: return=minimal header so a request using "
                 "@odata.deltaLink returns only properties that changed since that link was issued, "
-                "instead of the full default property set."
+                "instead of the full default property set. Defaults to false."
             ),
         ),
     ) -> GetUsersDeltaResult:
